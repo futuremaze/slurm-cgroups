@@ -1,0 +1,2 @@
+# slurm-cgroups
+Slurmでcgroupsによるリソース制限が有効かどうかを検証する
