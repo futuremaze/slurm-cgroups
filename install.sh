@@ -22,23 +22,25 @@ sudo sh -c "cat > /etc/cgconfig.conf" <<EOF
 group slurm {
   cpuset {
     cpuset.cpus = "0";
+    cpuset.mems = "0";
     cpuset.cpu_exclusive = "1";
   }
 }
 group other {
   cpuset {
     cpuset.cpus = "1";
+    cpuset.mems = "0";
   }
 }
 EOF
 
 sudo sh -c "cat > /etc/cgrules.conf" <<EOF
 #<user/group:bin> <controller(s)>      <cgroup>
-root              cpu,cpuset,memory    /
-slurm             cpu,cpuset,memory    /slurm
-mysql             cpu,cpuset,memory    /slurm
-munge             cpu,cpuset,memory    /slurm
-*                 cpu,cpuset,memory    /other
+root              cpuset               /
+slurm             cpuset               /slurm
+mysql             cpuset               /slurm
+munge             cpuset               /slurm
+*                 cpuset               /other
 EOF
 
 sudo cp /usr/share/doc/cgroup-tools/examples/cgred.conf /etc/
@@ -80,9 +82,9 @@ EOF
 # systemd 登録
 sudo systemctl daemon-reload
 sudo systemctl enable cgconfigparser
-sudo systemctl enable cgrulesengd
+# sudo systemctl enable cgrulesengd
 sudo systemctl start cgconfigparser
-sudo systemctl start cgrulesengd
+# sudo systemctl start cgrulesengd
 
 # munge インストール
 sudo -E apt-get install -y munge
