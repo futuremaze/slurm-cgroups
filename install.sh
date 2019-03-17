@@ -148,6 +148,10 @@ NodeName=localhost NodeAddr=127.0.0.1 CPUs=1 State=UNKNOWN
 PartitionName=debug Nodes=localhost Default=YES MaxTime=INFINITE State=UP
 EOF
 
+# slurmd に cgroup 設定を適用
+sudo cp /lib/systemd/system/slurmd.service /etc/systemd/system/
+sudo sed -i 's,\(^ExecStart\)=\(.*\),\1=/usr/bin/cgexec -g cpuset:/slurm --sticky /bin/sh -c \"\2\",' /etc/systemd/system/slurmd.service
+
 sudo systemctl enable slurmctld
 sudo systemctl start slurmctld
 sudo systemctl enable slurmd
