@@ -1,0 +1,17 @@
+group slurm {
+  cpuset {
+    cpuset.cpus = "0";
+    cpuset.mems = "0";
+    cpuset.cpu_exclusive = "1";
+  }
+}
+group other {
+  cpuset {
+    cpuset.cpus = "1";
+    cpuset.mems = "0";
+  }
+  memory {
+    memory.limit_in_bytes = "100M";
+    memory.memsw.limit_in_bytes = "500M";
+  }
+}
