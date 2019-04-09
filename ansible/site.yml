@@ -51,6 +51,7 @@
         owner: root
         group: root
         mode: 0644
+      notify: cgroup の設定を適用する
       with_items:
       - src: "./templates/cgconfig.conf.j2"
         dest: "/etc/cgconfig.conf"
@@ -104,9 +105,12 @@
         owner: root
         group: root
         mode: 0644
+      notify: slurm を再起動する
       with_items:
       - src: "./templates/slurm.conf.j2"
         dest: "/etc/slurm-llnl/slurm.conf"
+      - src: "./templates/cgroup.conf.j2"
+        dest: "/etc/slurm-llnl/cgroup.conf"
       tags:
       - conf
 
@@ -128,8 +132,24 @@
         - "slurmd"
     
     - name: 再起動要否の確認
-      debug:
+      fail:
         msg: "Please reboot!"
       when: grub_config is changed
 
+  handlers:
+    - name: cgroup の設定を適用する
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+      with_items:
+      - "cgconfigparser.service"
+      - "cgrulesengd.service"
+
+    - name: slurm を再起動する
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+      with_items:
+        - "slurmctld"
+        - "slurmd" 
 ...

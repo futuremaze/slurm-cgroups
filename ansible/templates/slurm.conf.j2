@@ -19,7 +19,7 @@ SlurmUser=slurm
 #SlurmdUser=root
 StateSaveLocation=/var/lib/slurm-llnl/slurmctld
 SwitchType=switch/none
-TaskPlugin=task/none
+TaskPlugin=task/cgroup
 #
 #
 # TIMERS
@@ -33,7 +33,12 @@ TaskPlugin=task/none
 FastSchedule=1
 SchedulerType=sched/backfill
 #SchedulerPort=7321
-SelectType=select/linear
+#SelectType=select/linear
+SelectType=select/cons_res
+SelectTypeParameters=CR_Core_Memory
+DefMemPerCPU=10
+MaxMemPerCPU=10
+MemLimitEnforce=yes
 #
 #
 # LOGGING AND ACCOUNTING
