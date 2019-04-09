@@ -77,8 +77,6 @@
       with_items:
       - src: "./templates/cgconfigparser.service.j2"
         dest: "/etc/systemd/system/cgconfigparser.service"
-      - src: "./templates/cgrulesengd.service.j2"
-        dest: "/etc/systemd/system/cgrulesengd.service"
   
     - name: 自動起動を設定する
       systemd:
@@ -87,7 +85,6 @@
         daemon_reload: yes
       with_items:
       - "cgconfigparser.service"
-      - "cgrulesengd.service"
   
     # install slurm
     - name: slurm をインストールする
@@ -143,7 +140,6 @@
         state: restarted
       with_items:
       - "cgconfigparser.service"
-      - "cgrulesengd.service"
 
     - name: slurm を再起動する
       systemd:

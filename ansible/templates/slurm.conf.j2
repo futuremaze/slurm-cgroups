@@ -47,11 +47,13 @@ ClusterName=cluster
 #JobAcctGatherFrequency=30
 JobAcctGatherType=jobacct_gather/none
 #SlurmctldDebug=3
+SlurmctldDebug=debug
 SlurmctldLogFile=/var/log/slurm-llnl/slurmctld.log
 #SlurmdDebug=3
+SlurmdDebug=debug
 SlurmdLogFile=/var/log/slurm-llnl/slurmd.log
 #
 #
 # COMPUTE NODES
-NodeName=localhost NodeAddr=127.0.0.1 CPUs=1 State=UNKNOWN
+NodeName=localhost NodeAddr=127.0.0.1 CPUs=1 State=UNKNOWN RealMemory=50
 PartitionName=debug Nodes=localhost Default=YES MaxTime=INFINITE State=UP
