@@ -15,6 +15,7 @@ EOF
 
 # grub.conf 書き換え(http://rolk.github.io/2015/04/20/slurm-cluster)
 sudo sed -i 's,\(^GRUB_CMDLINE_LINUX_DEFAULT\)=\"\(.*\)",\1=\"\2 cgroup_enable=memory swapaccount=1\",' /etc/default/grub
+sudo sed -i 's,\(^GRUB_CMDLINE_LINUX\)=\"\(.*\)",\1=\"\2 cgroup_enable=memory swapaccount=1\",' /etc/default/grub
 sudo update-grub
 
 # cgroups 設定
@@ -31,16 +32,20 @@ group other {
     cpuset.cpus = "1";
     cpuset.mems = "0";
   }
+  memory {
+    memory.limit_in_bytes = "100M";
+    memory.memsw.limit_in_bytes = "500M";
+  }
 }
 EOF
 
 sudo sh -c "cat > /etc/cgrules.conf" <<EOF
 #<user/group:bin> <controller(s)>      <cgroup>
 root              cpuset               /
-slurm             cpuset               /slurm
-mysql             cpuset               /slurm
-munge             cpuset               /slurm
-*                 cpuset               /other
+slurm             cpuset,memory        /slurm
+mysql             cpuset,memory        /slurm
+munge             cpuset,memory        /slurm
+*                 cpuset,memory        /other
 EOF
 
 sudo cp /usr/share/doc/cgroup-tools/examples/cgred.conf /etc/
@@ -83,7 +88,7 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable cgconfigparser
 # sudo systemctl enable cgrulesengd
-sudo systemctl start cgconfigparser
+# sudo systemctl start cgconfigparser
 # sudo systemctl start cgrulesengd
 
 # munge インストール
@@ -153,7 +158,8 @@ sudo cp /lib/systemd/system/slurmd.service /etc/systemd/system/
 sudo sed -i 's,\(^ExecStart\)=\(.*\),\1=/usr/bin/cgexec -g cpuset:/slurm --sticky /bin/sh -c \"\2\",' /etc/systemd/system/slurmd.service
 
 sudo systemctl enable slurmctld
-sudo systemctl start slurmctld
 sudo systemctl enable slurmd
-sudo systemctl start slurmd
+# sudo systemctl start slurmctld
+# sudo systemctl start slurmd
 
+echo "Please reboot!"
