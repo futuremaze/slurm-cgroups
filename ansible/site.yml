@@ -118,6 +118,9 @@
         owner: root
         group: root
         mode: 0644
+      notify: slurm を再起動する
+      tags:
+      - conf
 
     - name: slurm の自動起動を設定する
       systemd:
@@ -145,7 +148,8 @@
       systemd:
         name: "{{ item }}"
         state: restarted
+        daemon_reload: yes
       with_items:
         - "slurmctld"
-        - "slurmd" 
+        - "slurmd"
 ...
