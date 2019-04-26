@@ -7,7 +7,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider "virtualbox" do |vb|
     # CPUの数
-    vb.cpus = 2
+    vb.cpus = 4
     # 割り当てるメモリー(MB)
     vb.memory = 1024
     # I/O APICの有効化

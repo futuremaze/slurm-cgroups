@@ -1,0 +1,155 @@
+---
+- hosts: localhost
+  become: yes
+  tasks:
+    # install cgroups
+    - name: cgroups をインストールする
+      apt:
+        name:
+        - cgroup-bin
+        - cgroup-tools
+        - libpam-cgroup
+        state: present
+        update_cache: yes
+
+    - name: 負荷をかけるツールをインストールする
+      apt:
+        name: stress
+        state: present
+
+    # update settings
+    - name: PAM 認証時に cgroup 設定を適用する
+      template:
+        src: ./templates/common-session.j2
+        dest: /etc/pam.d/common-sesstion
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: cgroup で SWAP使用量を制御できるように grub.conf を更新する
+      lineinfile:
+        dest: /etc/default/grub
+        state: present
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        backrefs: yes
+      register: grub_config
+      with_items:
+      - regexp: '^(?!.*cgroup_enable=memory swapaccount=1)(GRUB_CMDLINE_LINUX_DEFAULT)="(.*)"'
+        line: '\1="\2 cgroup_enable=memory swapaccount=1"'
+      - regexp: '^(?!.*cgroup_enable=memory swapaccount=1)(GRUB_CMDLINE_LINUX)="(.*)"'
+        line: '\1="\2 cgroup_enable=memory swapaccount=1"'
+
+    - name: grub.conf を更新する
+      command: update-grub
+      when: grub_config is changed
+
+    - name: cgroups を設定する
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: root
+        mode: 0644
+      notify: cgroup の設定を適用する
+      with_items:
+      - src: "./templates/cgconfig.conf.j2"
+        dest: "/etc/cgconfig.conf"
+      - src: "./templates/cgrules.conf.j2"
+        dest: "/etc/cgrules.conf"
+      tags:
+      - conf
+
+    - name: cgred を設定する
+      copy:
+        src: /usr/share/doc/cgroup-tools/examples/cgred.conf
+        remote_src: yes
+        dest: /etc/cgred.conf
+
+    # enable cgroup in systemd
+    - name: cgroup service ファイルを追加する
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: root
+        mode: 0644
+      with_items:
+      - src: "./templates/cgconfigparser.service.j2"
+        dest: "/etc/systemd/system/cgconfigparser.service"
+
+    - name: 自動起動を設定する
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        daemon_reload: yes
+      with_items:
+      - "cgconfigparser.service"
+
+    # install slurm
+    - name: slurm をインストールする
+      apt:
+        name:
+        - munge
+        - slurm-wlm
+        state: present
+        update_cache: yes
+
+    - name: slurm 設定ファイルを追加する
+      template:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        owner: root
+        group: root
+        mode: 0644
+      notify: slurm を再起動する
+      with_items:
+      - src: "./templates/slurm.conf.j2"
+        dest: "/etc/slurm-llnl/slurm.conf"
+      - src: "./templates/cgroup.conf.j2"
+        dest: "/etc/slurm-llnl/cgroup.conf"
+      tags:
+      - conf
+
+    - name: slurm service ファイルを追加する
+      template:
+        src: ./templates/slurmd.service.j2
+        dest: /etc/systemd/system/slurmd.service
+        owner: root
+        group: root
+        mode: 0644
+      notify: slurm を再起動する
+      tags:
+      - conf
+
+    - name: slurm の自動起動を設定する
+      systemd:
+        name: "{{ item }}"
+        enabled: yes
+        daemon_reload: yes
+      with_items:
+        - "slurmctld"
+        - "slurmd"
+
+    - name: 再起動要否の確認
+      fail:
+        msg: "Please reboot!"
+      when: grub_config is changed
+
+  handlers:
+    - name: cgroup の設定を適用する
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+      with_items:
+      - "cgconfigparser.service"
+
+    - name: slurm を再起動する
+      systemd:
+        name: "{{ item }}"
+        state: restarted
+        daemon_reload: yes
+      with_items:
+        - "slurmctld"
+        - "slurmd"
+...
