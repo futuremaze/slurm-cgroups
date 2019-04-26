@@ -8,7 +8,8 @@ ControlAddr=127.0.0.1
 #MailProg=/bin/mail
 MpiDefault=none
 #MpiParams=ports=#-#
-ProctrackType=proctrack/pgid
+#ProctrackType=proctrack/pgid
+ProctrackType=proctrack/cgroup
 ReturnToService=1
 SlurmctldPidFile=/var/run/slurm-llnl/slurmctld.pid
 #SlurmctldPort=6817
@@ -36,9 +37,9 @@ SchedulerType=sched/backfill
 #SelectType=select/linear
 SelectType=select/cons_res
 SelectTypeParameters=CR_Core_Memory
-DefMemPerCPU=10
-MaxMemPerCPU=10
-MemLimitEnforce=yes
+DefMemPerCPU=5
+MaxMemPerCPU=20
+MemLimitEnforce=no
 #
 #
 # LOGGING AND ACCOUNTING
@@ -55,5 +56,5 @@ SlurmdLogFile=/var/log/slurm-llnl/slurmd.log
 #
 #
 # COMPUTE NODES
-NodeName=localhost NodeAddr=127.0.0.1 CPUs=1 State=UNKNOWN RealMemory=50
+NodeName=localhost NodeAddr=127.0.0.1 CPUs=4 CpuSpecList=0,1 State=UNKNOWN RealMemory=100
 PartitionName=debug Nodes=localhost Default=YES MaxTime=INFINITE State=UP
